@@ -9,7 +9,11 @@ class SayHelloActor extends Actor {
   override def receive: Receive = {
     case "hello" => println("收到hello")
     case "world" => println("收到world")
-    case "exit" => println("退出")
+    case "exit" => {
+      println("退出系统")
+      context.stop(self) //停止ActorRef
+      context.system.terminate() //退出ActorSystem
+    }
     case _ => println("匹配不到")
   }
 }
@@ -23,12 +27,14 @@ object SayHelloActorDemo {
   //创建actorFactory，可以创建和管理Actor
   private val actorFactory = ActorSystem("actorFactory")
   //Props[SayHelloActor]用反射创建SayHelloActor的一个实例,sayHelloActor给actor取名字，actorRef是sayHelloActor的引用
-  private val actorRef: ActorRef = actorFactory.actorOf(Props[SayHelloActor],"sayHelloActor")
+  private val actorRef: ActorRef = actorFactory.actorOf(Props[SayHelloActor], "sayHelloActor")
 
   def main(args: Array[String]): Unit = {
     //给SayHelloActor发消息
     actorRef ! "hello"
     actorRef ! "world"
     actorRef ! "hello"
+    actorRef ! "hello@"
+    actorRef ! "exit"
   }
 }
