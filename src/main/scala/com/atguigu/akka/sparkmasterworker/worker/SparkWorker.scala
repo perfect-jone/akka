@@ -3,8 +3,10 @@ package com.atguigu.akka.sparkmasterworker.worker
 import java.util.UUID
 
 import akka.actor.{Actor, ActorRef, ActorSelection, ActorSystem, Props}
-import com.atguigu.akka.sparkmasterworker.common.{RegisterWorkerInfo, RegisterdWorkerInfo}
+import com.atguigu.akka.sparkmasterworker.common.{HeartBeat, RegisterWorkerInfo, RegisterdWorkerInfo, SentHeartBeat}
 import com.typesafe.config.ConfigFactory
+
+import scala.concurrent.duration._
 
 class SparkWorker(masterHost: String, masterPort: Int) extends Actor {
   var masterProxy: ActorSelection = _
@@ -24,7 +26,20 @@ class SparkWorker(masterHost: String, masterPort: Int) extends Actor {
       println("Worker客户端启动了...")
       masterProxy ! RegisterWorkerInfo(id, 16, 16)
     }
-    case RegisterdWorkerInfo => println("workerid="+ id + "注册成功")
+    case RegisterdWorkerInfo => {
+      println("workerid=" + id + "注册成功")
+      //注册成功后，就定义一个定时器，每隔一段时间，发送SentHeartBeat给自己
+      import context.dispatcher
+      //1. 0 millis 表示不延时，立即执行
+      //2. 3000 millis 表示每隔3秒执行一次
+      //3. self 表示发送给自己
+      //4. SentHeartBeat 发送的内容
+      context.system.scheduler.schedule(0 millis, 3000 millis, self, SentHeartBeat)
+    }
+    case SentHeartBeat => {
+      println("worker= " + id + " 给服务器发送心跳")
+      masterProxy ! HeartBeat(id)
+    }
   }
 }
 
