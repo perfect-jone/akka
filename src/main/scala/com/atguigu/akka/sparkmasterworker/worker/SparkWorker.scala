@@ -1,20 +1,30 @@
 package com.atguigu.akka.sparkmasterworker.worker
 
+import java.util.UUID
+
 import akka.actor.{Actor, ActorRef, ActorSelection, ActorSystem, Props}
+import com.atguigu.akka.sparkmasterworker.common.{RegisterWorkerInfo, RegisterdWorkerInfo}
 import com.typesafe.config.ConfigFactory
 
 class SparkWorker(masterHost: String, masterPort: Int) extends Actor {
+  var masterProxy: ActorSelection = _
+  val id = UUID.randomUUID().toString
 
   override def preStart(): Unit = {
+
     //初始化masterProxy
-    val masterProxy: ActorSelection = context
+    masterProxy = context
       .actorSelection(s"akka.tcp://SparkMaster@${masterHost}:${masterPort}/user/SparkMaster-01")
     println("masterProxy=" + masterProxy)
 
   }
 
   override def receive: Receive = {
-    case "start" => println("Worker客户端启动了...")
+    case "start" => {
+      println("Worker客户端启动了...")
+      masterProxy ! RegisterWorkerInfo(id, 16, 16)
+    }
+    case RegisterdWorkerInfo => println("workerid="+ id + "注册成功")
   }
 }
 

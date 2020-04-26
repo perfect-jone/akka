@@ -1,11 +1,29 @@
 package com.atguigu.akka.sparkmasterworker.master
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import com.atguigu.akka.sparkmasterworker.common.{RegisterWorkerInfo, RegisterdWorkerInfo, WorkerInfo}
 import com.typesafe.config.ConfigFactory
 
-class SparkMaster extends Actor{
+import scala.collection.mutable
+
+class SparkMaster extends Actor {
+
+  //定义一个hashMap，用于管理worker
+  val workers = new mutable.HashMap[String, WorkerInfo]()
+
   override def receive: Receive = {
-    case "start" => print("Master服务器启动了...")
+    case "start" => println("Master服务器启动了...")
+    case RegisterWorkerInfo(id, cpu, ram) => {
+      //接收到work的注册信息
+      if (!workers.contains(id)) {
+        val workerInfo = new WorkerInfo(id, cpu, ram)
+        workers += (id -> workerInfo)
+        //workers += ((id,workerInfo))
+        println("服务器的workers="+workers)
+        //注册成功后，回复客户端一个消息
+        sender() ! RegisterdWorkerInfo
+      }
+    }
   }
 }
 
@@ -18,10 +36,10 @@ object SparkMaster extends App {
             """.stripMargin)
 
   //创建master的ActorSystem
-  val sparkMasterSystem = ActorSystem("SparkMaster",config)
+  val sparkMasterSystem = ActorSystem("SparkMaster", config)
 
   //创建master的ActorRef
-  val sparkMasterRef: ActorRef = sparkMasterSystem.actorOf(Props[SparkMaster],"SparkMaster-01")
+  val sparkMasterRef: ActorRef = sparkMasterSystem.actorOf(Props[SparkMaster], "SparkMaster-01")
 
   //启动SparkMaster
   sparkMasterRef ! "start"
