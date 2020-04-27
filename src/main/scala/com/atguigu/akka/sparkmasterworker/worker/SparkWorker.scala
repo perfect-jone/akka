@@ -1,11 +1,9 @@
 package com.atguigu.akka.sparkmasterworker.worker
 
 import java.util.UUID
-
 import akka.actor.{Actor, ActorRef, ActorSelection, ActorSystem, Props}
 import com.atguigu.akka.sparkmasterworker.common.{HeartBeat, RegisterWorkerInfo, RegisterdWorkerInfo, SentHeartBeat}
 import com.typesafe.config.ConfigFactory
-
 import scala.concurrent.duration._
 
 class SparkWorker(masterHost: String, masterPort: Int) extends Actor {
