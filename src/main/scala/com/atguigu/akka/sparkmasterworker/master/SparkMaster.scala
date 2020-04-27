@@ -58,19 +58,29 @@ class SparkMaster extends Actor {
 }
 
 object SparkMaster extends App {
+  if (args.length != 3) {
+    println("请输入参数：workerHost workerPort SparkMasterActorName")
+/*  127.0.0.1
+    10005
+    SparkMaster-01*/
+    sys.exit()
+  }
+  val masterHost = args(0)
+  val masterPort = args(1)
+  val SparkMasterActorName = args(2)
 
   val config = ConfigFactory.parseString(
     s"""
        |akka.actor.provider="akka.remote.RemoteActorRefProvider"
-       |akka.remote.netty.tcp.hostname=127.0.0.1
-       |akka.remote.netty.tcp.port=10005
+       |akka.remote.netty.tcp.hostname=${masterHost}
+       |akka.remote.netty.tcp.port=${masterPort}
             """.stripMargin)
 
   //创建master的ActorSystem
   val sparkMasterSystem = ActorSystem("SparkMaster", config)
 
   //创建master的ActorRef
-  val sparkMasterRef: ActorRef = sparkMasterSystem.actorOf(Props[SparkMaster], "SparkMaster-01")
+  val sparkMasterRef: ActorRef = sparkMasterSystem.actorOf(Props[SparkMaster], s"${SparkMasterActorName}")
 
   //启动SparkMaster
   sparkMasterRef ! "start"
